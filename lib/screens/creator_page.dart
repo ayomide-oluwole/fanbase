@@ -3,6 +3,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../models/creator_model.dart';
 import '../services/firestore_service.dart';
 import '../widgets/ephemeral_post.dart';
+import '../widgets/create_post_modal.dart';
 
 class CreatorPage extends StatefulWidget {
   final CreatorModel creator;
@@ -21,11 +22,12 @@ class _CreatorPageState extends State<CreatorPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize YouTube Player with the creator's current stream ID
-    // If offline, we'd load their latest VOD ID here.
-    String videoId = widget.creator.currentStreamId ?? '视频中'; // Replace with actual VOD ID logic
+    // Initialize YouTube Player. 
+    // If offline, currentStreamId is null, so we load a placeholder or empty string.
+    String videoId = widget.creator.currentStreamId ?? '';
+    
     _ytController = YoutubePlayerController(
-      initialVideoId: YoutubePlayer.convertUrlToId(videoId) ?? '',
+      initialVideoId: videoId,
       flags: const YoutubePlayerFlags(
         autoPlay: true,
         mute: false,
@@ -68,6 +70,31 @@ class _CreatorPageState extends State<CreatorPage> {
           appBar: AppBar(
             title: Text(widget.creator.name),
           ),
+          // Floating Action Button for Post Creation (Only shows if stream is live)
+          floatingActionButton: widget.creator.currentStreamId != null
+              ? FloatingActionButton.extended(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: CreatePostModal(
+                          creatorId: widget.creator.id,
+                          streamId: widget.creator.currentStreamId!,
+                          // TODO: Replace with actual Firebase Auth UID later
+                          userId: 'temp_user_123', 
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Post'),
+                )
+              : null,
           body: Column(
             children: [
               // YouTube Player (Adapts to full screen when rotated to landscape)
@@ -99,9 +126,9 @@ class _CreatorPageState extends State<CreatorPage> {
                               children: [
                                 const Text('AI Stream Recap', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 16),
-                                Text(
+                                const Text(
                                   'Speed started the stream by reacting to fan art, then played a game of FIFA, and finally attempted a backflip on camera.',
-                                  style: const TextStyle(color: Colors.grey),
+                                  style: TextStyle(color: Colors.grey),
                                 ),
                               ],
                             ),
