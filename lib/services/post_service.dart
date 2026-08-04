@@ -8,7 +8,7 @@ class PostService {
   
   // Initialize Cloudinary (FREE TIER - NO CREDIT CARD)
   // TODO: Replace 'YOUR_CLOUD_NAME' and 'YOUR_UNSIGNED_PRESET' with your Cloudinary details
-  final cloudinary = CloudinaryPublic('YOUR_CLOUD_NAME', 'YOUR_UNSIGNED_PRESET', cache: false);
+  final cloudinary = CloudinaryPublic('l4pihnnk', 'fanbase_unsigned', cache: false);
 
   Future<void> createPost({
     required String creatorId,
