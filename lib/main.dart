@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'screens/home_screen.dart';
+import 'package:fanbase/services/auth_service.dart';
+import 'package:fanbase/screens/home_screen.dart';
+import 'package:fanbase/screens/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  
+  // Initialize Auth Service
+  final AuthService authService = AuthService();
+  
+  // If no one is logged in, start an anonymous session for browsing
+  if (authService.currentUser == null) {
+    await authService.signInAnonymously();
+  }
+
   runApp(const FanbaseApp());
 }
 
@@ -36,6 +47,11 @@ class FanbaseApp extends StatelessWidget {
         ),
       ),
       home: const HomeScreen(),
+      // Define routes so we can easily navigate to Auth screens
+      routes: {
+        '/login': (context) => const AuthScreen(isLogin: true),
+        '/signup': (context) => const AuthScreen(isLogin: false),
+      },
     );
   }
 }
