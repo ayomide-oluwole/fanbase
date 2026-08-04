@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/creator_model.dart';
 import '../services/firestore_service.dart';
 import '../widgets/ephemeral_post.dart';
@@ -42,6 +43,19 @@ class _CreatorPageState extends State<CreatorPage> {
   }
 
   void _toggleBookmark() {
+    // Auth Gate: Check if user is anonymous
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to bookmark moments.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.pushNamed(context, '/login');
+      return;
+    }
+
     setState(() {
       _isBookmarked = !_isBookmarked;
     });
@@ -74,22 +88,36 @@ class _CreatorPageState extends State<CreatorPage> {
           floatingActionButton: widget.creator.currentStreamId != null
               ? FloatingActionButton.extended(
                   onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => Padding(
-                        padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                    // Auth Gate: Check if user is anonymous
+                    User? user = FirebaseAuth.instance.currentUser;
+                    if (user == null || user.isAnonymous) {
+                      // Force Login
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please log in to post.'),
+                          duration: Duration(seconds: 2),
                         ),
-                        child: CreatePostModal(
-                          creatorId: widget.creator.id,
-                          streamId: widget.creator.currentStreamId!,
-                          // TODO: Replace with actual Firebase Auth UID later
-                          userId: 'temp_user_123', 
+                      );
+                      Navigator.pushNamed(context, '/login');
+                    } else {
+                      // Allow Posting
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => Padding(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                          child: CreatePostModal(
+                            creatorId: widget.creator.id,
+                            streamId: widget.creator.currentStreamId!,
+                            // Now uses the actual logged-in user ID!
+                            userId: user.uid, 
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   },
                   icon: const Icon(Icons.edit),
                   label: const Text('Post'),
